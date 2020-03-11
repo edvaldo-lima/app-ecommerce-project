@@ -1,0 +1,93 @@
+-
+  name: Install LAMP stack server on target server
+  hosts: all
+  become: yes
+  tasks:
+    - name: Install and configure Firewalld required packages
+      yum:
+        name: firewalld
+        state: present
+    - name: Start firewalld service
+      service:
+        name: firewalld
+        state: started
+
+    - name: Deploy and Configure Database
+      yum:
+        name: mariadb-server
+        state: present
+    - name: Start mariadb service
+      service:
+        name: mariadb
+        state: started
+
+    - name: Configure firewalld for Database
+      firewalld:
+        port: 3306/tcp
+        permanent: true
+        immediate: yes
+        state: enabled
+        zone: public
+
+    - name: Creating the Database
+      mysql_db:
+        name: 'ecomdb'
+        state: present
+
+    - name: Granting privileges
+      mysql_user:
+        name: ecomuser
+        password: ecompassword
+        priv: '*.*:ALL'
+
+    - name: Copy mysql script file to target server
+      copy:
+        src: /home/osboxes/test-project/ansible-demos-exercises/app-ecommerce-project/db-load-script.sql
+        dest: /home/osboxes/.ansible/tmp/db-load-script.sql
+
+    - name: Load Product Inventory Information to database
+      mysql_db:
+        name: ecomdb
+        state: import
+        target: /home/osboxes/.ansible/tmp/db-load-script.sql
+
+    - name: Deploy and Configure Web required packages
+      yum:
+        name: httpd, php, php-mysql
+        state: present
+
+    - name: Configure firewall Web server
+      firewalld:
+        port: 80/tcp
+        permanent: true
+        immediate: yes
+        state: enabled
+        zone: public
+
+    - name: Configure httpd
+      lineinfile:
+        path: /etc/httpd/conf/httpd.conf
+        line: 'DirectoryIndex index.php'
+
+    - name: Start httpd
+      service:
+        name: httpd
+        state: started
+
+    - name: Download code
+      yum:
+        name: git
+        state: present
+
+    - name: Clone git repo
+      git:
+        repo: 'https://github.com/kodekloudhub/learning-app-ecommerce.git'
+        dest: /var/www/html/
+        clone: yes
+        force: yes
+
+    - name: Update index.php
+      replace:
+          path: /var/www/html/index.php
+          regexp: '172.20.1.101'
+          replace: 'localhost'
