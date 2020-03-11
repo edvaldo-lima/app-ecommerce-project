@@ -1,0 +1,2 @@
+web_db_server_1 ansible_host=10.0.0.15   ansible_connection=ssh ansible_user=root ansible_ssh_pass=osboxes.org
+web_db_server_2 ansible_host=10.0.0.122  ansible_connection=ssh ansible_user=root ansible_ssh_pass=osboxes.org
