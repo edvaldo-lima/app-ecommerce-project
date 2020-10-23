@@ -1,3 +1,3 @@
 
 # app-ecommerce-project
-This is an Ansible playbook file used to create LAMP stack web app.
+This Ansible playbook creates LAMP stack web app.
